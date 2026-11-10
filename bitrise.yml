@@ -1,0 +1,60 @@
+format_version: '11'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: other
+
+# Bitrise CI Workflow: MOST Portable POS Terminal & Travel Gateway Integration
+# Automates regression testing for cabin crew handheld terminals syncing offline batches
+
+workflows:
+  primary:
+    summary: Run static checks, security scan, and automated QA tests
+    steps:
+    - activate-ssh-key@4:
+        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+    - git-clone-repository@1: {}
+    - script@1:
+        title: Setup Python and Install Dependencies
+        inputs:
+        - content: |
+            #!/usr/bin/env bash
+            set -e
+            python3 -m pip install --upgrade pip
+            pip3 install -r requirements.txt
+    - script@1:
+        title: Run Flake8 and Bandit Security Audit
+        inputs:
+        - content: |
+            #!/usr/bin/env bash
+            set -e
+            flake8 app tests --max-line-length=135 --ignore=E203,W503
+            bandit -r app -ll -ii
+    - script@1:
+        title: Execute Pytest Suite (POS Offline Sync & Payments)
+        inputs:
+        - content: |
+            #!/usr/bin/env bash
+            set -e
+            mkdir -p reports
+            pytest -v \
+              --cov=app \
+              --cov-report=term-missing \
+              --cov-report=xml:reports/coverage.xml \
+              --junitxml=reports/junit.xml
+    - deploy-to-bitrise-io@2:
+        title: Deploy Test & Coverage Reports
+        inputs:
+        - deploy_path: reports/
+        - is_enable_retries: "true"
+
+  pos-offline-sync-regression:
+    summary: Targeted regression test for cabin crew portable POS terminal batch sync
+    steps:
+    - git-clone-repository@1: {}
+    - script@1:
+        title: Run Offline Store-and-Forward Sync Tests
+        inputs:
+        - content: |
+            #!/usr/bin/env bash
+            set -e
+            pip3 install -r requirements.txt
+            pytest -v tests/test_offline_sync.py tests/test_idempotency.py

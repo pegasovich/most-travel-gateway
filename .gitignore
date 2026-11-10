@@ -15,8 +15,9 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
+reports/
 
 # Logs & OS artifacts
 *.log
-.DS_Store
+*.DS_Store
 Thumbs.db

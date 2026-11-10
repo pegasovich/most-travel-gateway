@@ -4,14 +4,13 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models import (
     Transaction,
     TransactionStatus,
-    InvalidStateTransitionError,
 )
 from app.schemas import (
     OfflineBatchItemResult,
@@ -293,7 +292,7 @@ class PaymentService:
 
         for status, curr, count, total_amt in rows:
             amt = Decimal(str(total_amt or "0.00"))
-            
+
             # Status rollups
             status_aggregates[status]["count"] += count
             status_aggregates[status]["total_amount"] += amt

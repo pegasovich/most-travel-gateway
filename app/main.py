@@ -1,8 +1,9 @@
-"""FastAPI Entrypoint: MOST Travel Payment Gateway and Back-Office Simulation."""
+"""FastAPI Main Entrypoint for MOST Travel Retail Payment Gateway."""
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.api import api_router
 from app.config import settings
 from app.database import Base, engine
@@ -10,31 +11,23 @@ from app.database import Base, engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Ensure tables exist
+    # Startup: ensure tables exist
     Base.metadata.create_all(bind=engine)
     yield
-    # Teardown logic if needed
+    # Shutdown logic if required
 
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="""
-### Travel Payment Gateway & Back-Office API (MOST Simulation)
-
-A resilient, audit-compliant payment processing system engineered for high-mobility travel environments 
-(commercial flights, rail, maritime) with offline store-and-forward capability.
-
-#### Key Architectural Capabilities:
-- **Financial Idempotency**: Safe payment submissions with `Idempotency-Key` header handling.
-- **Workflow State Machine**: `PENDING -> AUTHORIZED -> CAPTURED -> REFUNDED` (or `VOIDED`).
-- **Store-and-Forward Offline Batch Sync**: Handles inflight POS offline transaction ingestion and gracefully dedupes.
-- **Back-Office Reconciliation**: Real-time aggregation of transactional volume and breakdown by status/currency.
-    """,
+    description=(
+        "Simulated MOST Onboard Store & Payment Gateway for high-mobility, "
+        "low-connectivity airline and rail retail."
+    ),
     lifespan=lifespan,
 )
 
-# CORS setup for web-based back-office terminals
+# CORS middleware for back-office web portals & crew dashboard integration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -43,20 +36,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register v1 routes
+# Mount API routers
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
-@app.get("/", tags=["Health"])
-def root():
+@app.get("/", tags=["Root"])
+def root_info():
+    """Service overview & API versioning info."""
     return {
-        "system": settings.PROJECT_NAME,
+        "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
-        "status": "OPERATIONAL",
-        "documentation": "/docs",
+        "docs_url": "/docs",
         "endpoints": {
             "create_payment": "POST /api/v1/payments",
             "capture_payment": "POST /api/v1/payments/{id}/capture",
+            "void_payment": "POST /api/v1/payments/{id}/void",
+            "refund_payment": "POST /api/v1/payments/{id}/refund",
             "sync_offline_batch": "POST /api/v1/payments/sync-offline-batch",
             "reconciliation": "GET /api/v1/reconciliation",
         },
@@ -70,4 +65,4 @@ def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)  # nosec B104

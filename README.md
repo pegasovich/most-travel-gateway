@@ -306,3 +306,27 @@ The test suite validates:
 - [x] Void and refund lifecycle endpoints.
 - [x] Inflight store-and-forward batch ingestion with graceful duplicate handling.
 - [x] Reconciliation aggregation and currency grouping calculations.
+
+
+---
+
+## 7. Enterprise CI/CD & Quality Gates
+
+The repository includes production configurations for all three CI/CD platforms explicitly required by MOST:
+
+1. **AWS CodePipeline / AWS CodeBuild (`buildspec.yml`)**:
+   - Backend service build & automated deployment pipeline for AWS.
+   - Enforces flake8 linting and Bandit security scanning (PCI-DSS compliance).
+   - Generates and publishes test reports to AWS CodeBuild Test Reports (`reports/junit.xml`) and Coverage Reports (`reports/coverage.xml`).
+
+2. **Jenkins Pipeline (`Jenkinsfile`)**:
+   - Multi-stage enterprise declarative pipeline.
+   - Automated quality gates checking line coverage $\ge 85\%$.
+   - Archives JUnit and Cobertura test artifacts.
+
+3. **Bitrise CI (`bitrise.yml`)**:
+   - Specialized for portable POS terminals, cabin crew handheld devices (iOS / Android), and mobile edge apps.
+   - Includes targeted regression workflow `pos-offline-sync-regression` verifying inflight store-and-forward batch ingestion.
+
+4. **GitHub Actions (`.github/workflows/ci.yml`)**:
+   - Immediate feedback on every commit and pull request.

@@ -59,16 +59,16 @@ class Transaction(Base):
 
     # Distributed / client-generated UUID compatible
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    
+
     # Financial idempotency constraint
     idempotency_key = Column(String(128), unique=True, index=True, nullable=False)
-    
+
     # Financial amounts with 2 decimal places precision
     amount = Column(Numeric(12, 2), nullable=False)
-    
+
     # ISO-4217 currency code (e.g., USD, EUR, GBP)
     currency = Column(String(3), nullable=False, index=True)
-    
+
     # Workflow status
     status = Column(
         Enum(TransactionStatus, native_enum=False),
@@ -76,12 +76,12 @@ class Transaction(Base):
         default=TransactionStatus.PENDING,
         index=True,
     )
-    
+
     description = Column(String(255), nullable=True)
-    
+
     # Travel contextual metadata (flight_number, route, seat_number, crew_member, terminal_id)
     metadata_json = Column(Text, nullable=True)
-    
+
     # Audit timestamps (stored with timezone UTC)
     created_at = Column(
         DateTime(timezone=True),
